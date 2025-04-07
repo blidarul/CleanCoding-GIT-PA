@@ -1,4 +1,5 @@
 /*Determinati daca exista sau nu drum direct intre doua restaurante dintr-o retea de tip graf*/
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -10,152 +11,161 @@ typedef struct Node
 // pentru simplitate, folosim int uri pt a numi restaurantele/locatiile
 // ex: 1 - restaurantul 1 si tot asa    
 
-typedef struct g
+typedef struct Graph
 {
     int v;
-    int *vis;
-    struct Node **alst;
-}GPH;
+    int *visited;
+    struct Node **alists;
+}GRAPH;
 
-typedef struct s
+typedef struct Stack
 {
-    int t;
-    int scap;
-    int *arr;
-}STK;
+    int top;
+    int cap;
+    int *array;
+}STACK;
 
-NODE *create_node(int v)
+NODE *create_node(int value)
 {
-    NODE *nn=malloc(sizeof(NODE));
-    nn->data=v;
-    nn->next=NULL;
-    return nn;
+    NODE *new_node = malloc(sizeof(NODE));
+    
+    new_node->data = value;
+    new_node->next = NULL;
+    return new_node;
 }
 
-void add_edge(GPH *g,int src,int dest)
+void add_edge(GRAPH *graph,int source,int destination)
 {
-    NODE *nn=create_node(dest);
-    nn->next=g->alst[src];
-    g->alst[src]=nn;
-    nn=create_node(src);
-    nn->next=g->alst[dest];
-    g->alst[dest]=nn;
+    NODE *new_node = create_node(destination);
+
+    new_node->next = graph->alists[source];
+    graph->alists[source] = new_node;
+    
+    new_node = create_node(source);
+    
+    new_node->next = graph->alists[destination];
+    graph->alists[destination] = new_node;
 }
 
-GPH *create_g(int v)
+GRAPH *createGraph(int v)
 {
     int i;
-    GPH *g=malloc(sizeof(GPH));
-    g->v=v;
-    g->alst=malloc(sizeof(NODE *));
-    g->vis=malloc(sizeof(int) *v);
+    
+    GRAPH *graph = malloc(sizeof(GRAPH));
+    
+    graph->v = v;
+    graph->alists = malloc(sizeof(NODE *));
+    graph->visited = malloc(sizeof(int) *v);
 
-    for (int i=0;i<v;i++)
+    for (int i = 0; i < v; i++)
     {
-        g->alst[i]=NULL;
-        g->vis[i]=0;
+        graph->alists[i] = NULL;
+        graph->visited[i] = 0;
     }    
-    return g;
+    return graph;
 }
 
-STK *create_s(int scap)
+STACK *create_stack(int cap)
 {
-    STK *s=malloc(sizeof(STK));
-    s->arr=malloc(scap*sizeof(int));
-    s->t = -1;
-    s->scap=scap;
+    STACK *stack = malloc(sizeof(STACK));
+    stack->array = malloc(cap * sizeof(int));
+    stack->top = -1;
+    stack->cap = cap;
 
-    return s;
+    return stack;
 }
 
-void push(int pshd,STK *s)
+void push(int pushed, STACK *stack)
 {
-    s->t=s->t+1;
-    s->arr[s->t]=pshd;
+    stack->top = stack->top + 1;
+    stack->array[stack->top] = pushed;
 }
 
-void DFS(GPH *g,STK *s,int v_nr)
+void DFS(GRAPH *graph, STACK *stack, int nr_noduri)
 {
-    NODE *adj_list=g->alst[v_nr];
-    NODE *aux=adj_list;
+    NODE *adj_list = graph->alists[nr_noduri];
+    NODE *aux = adj_list;
 
-    g->vis[v_nr]=1;
-    printf("%d ",v_nr);
-    push(v_nr,s);
+    graph->visited[nr_noduri] = 1;
+    printf("%d ", nr_noduri);
+    push(nr_noduri, stack);
 
     while (aux != NULL)
     {
-        int con_ver=aux->data;
-        if (g->vis[con_ver]==0)
-            DFS(g,s,con_ver);
-        aux=aux->next;
+        int nod_conectat = aux->data;
+
+        if (graph->visited[nod_conectat] == 0)
+        {
+            DFS(graph, stack, nod_conectat);
+        }
+        aux = aux->next;
     }
 }
 
-void insert_edges(GPH *g,int edg_nr,int nrv)
+void insert_edges(GRAPH *graph,int nr_muchii,int nr_noduri)
 {
-    int src,dest,i;
-    printf("adauga %d muchii (de la 1 la %d)\n",edg_nr,nrv);
-    
-    for (i=0;i<edg_nr;i++)
+    int src, dest, i;
+    printf("adauga %d muchii (de la 1 la %d)(scrie sursa si destinatie)\n",nr_muchii,nr_noduri);
+
+    for (i = 0; i < nr_muchii; i++)
     {
-        scanf("%d%d",&src,&dest);
-        add_edge(g,src,dest);
+        scanf("%d%d", &src, &dest);
+        add_edge(graph,src,dest);
     }
 }
 
-void wipe(GPH *g, int nrv)
+void wipe(GRAPH *graph, int nr_noduri)
 {
-    for (int i=0;i<nrv;i++)
+    for (int i = 0;i < nr_noduri; i++)
     {
-        g->vis[i] = 0;
+        graph->visited[i] = 0;
     }
 }    
 
-void canbe(GPH *g, int nrv, STK *s1, STK *s2)// 0 sau 1 daca poate fi sau nu ajuns
+void canbe(GRAPH *graph, int nr_noduri, STACK *stack1, STACK *stack2)
 {
-    int *canbe = calloc(5, sizeof(int)); 
-    for (int i = 0; i < nrv; i++) // aici i tine loc de numar adica de restaurant{for (int j = 0; j < 5; j++)
+    int *canbe = calloc(5, sizeof(int));        // 0 sau 1 daca poate fi sau nu ajuns
+
+    for (int i = 0; i < nr_noduri; i++) // aici i tine loc de numar adica de restaurant
     {
-        DFS(g, s1, i);
-        wipe(g, nrv);
-        DFS(g, s2, i);
-        for (int j = 0; j < nrv; j++)
+        for (int j = 0; j < 5; j++)
         {
-            for (int i = 0; i < nrv; i++)
+            DFS(graph, stack1, i);
+            wipe(graph, nr_noduri);
+            DFS(graph, stack2, i);
+            for (int j = 0; j < nr_noduri; j++)
             {
-                if ((s1->arr[i] == j) && (s2->arr[j] == i))
-                    *canbe = 1;
-                
-            }
-        }    
+                for (int i = 0; i < nr_noduri; i++)
+                {
+                    if ((stack1->array[i] == j) && (stack2->array[j] == i))
+                        *canbe = 1;
+                    
+                }
+            }    
+        }
     }
 }
-            
 
 int main()
 {
 
-    int nrv;
-    int edg_nr;
-    int src, dest;
-    int i;
-    int vortex_1;
-    int virtex_2;
-    int ans;
+    int nr_noduri;
+    int nr_muchii;
 
     printf("cate noduri are graful?");
-    scanf("%d", &nrv);
+    scanf("%d", &nr_noduri);
 
     printf("cate muchii are graful?");
-    scanf("%d", &edg_nr);
+    scanf("%d", &nr_muchii);
 
-    GPH *g = create_g(nrv);
+    GRAPH *g = createGraph(nr_noduri);
 
-    STK *s1 = create_s(2 * nrv);
-    STK *s2 = create_s(2 * nrv);
+    STACK *s1 = create_stack(2 * nr_noduri);
+    STACK *s2 = create_stack(2 * nr_noduri);
 
-    insert_edges(g, edg_nr,nrv);
+    insert_edges(g, nr_muchii, nr_noduri);
 
-    canbe(g, nrv, s1, s2);
+    canbe(g, nr_noduri, s1, s2);
+
+    return 0;
 }
