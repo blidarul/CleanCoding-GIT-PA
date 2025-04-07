@@ -27,12 +27,10 @@ NODE *create_node(int v)
 
 GRAPH *create_graph(int vertices)
 {
-    int i;
     GRAPH *graph = malloc(sizeof(GRAPH));
     graph->vertices = vertices;
-    graph->adjacency_lists = malloc(vertices * sizeof(NODE *));
-
-    graph->visited = malloc(sizeof(int) * vertices);
+    graph->adjacency_lists = (NODE **)malloc((size_t)vertices * sizeof(NODE *));
+    graph->visited = (int *)malloc((size_t)vertices * sizeof(int));
     for (int i = 0; i < vertices; i++)
     {
         graph->adjacency_lists[i] = NULL;
@@ -41,6 +39,7 @@ GRAPH *create_graph(int vertices)
     
     return graph;
 }
+
 void add_edge(GRAPH *graph, int src, int dest)
 {
     NODE *new_node = create_node(dest);
@@ -53,13 +52,14 @@ void add_edge(GRAPH *graph, int src, int dest)
     new_node->next = graph->adjacency_lists[dest];
     graph->adjacency_lists[dest] = new_node;
 }
-int *insedg(int nr_of_vertices, int nr_of_edges, GRAPH *graph)
+
+void insedg(int nr_of_vertices, int nr_of_edges, GRAPH *graph)
 { 
     int src, dest, i;
     printf("adauga %d muchii (de la 1 la %d)\n", nr_of_edges, nr_of_vertices);
     for (i = 0; i < nr_of_edges; i++)
     {
-        scanf("%d%d", &src, *&dest);
+        scanf("%d%d", &src, &dest);
         add_edge(graph, src, dest);
     }
 }
@@ -69,7 +69,7 @@ int is_empty(NODE *queue)
     return queue == NULL;
 }
 
-void enqueue(NODE ***queue, int data)
+void enqueue(NODE **queue, int data)
 {
     NODE *new_node = create_node(data);
 
@@ -91,6 +91,7 @@ int dequeue(NODE **queue)
     int data = (*queue)->data;
     NODE *temp = *queue;
     *queue = (*queue)->next;
+    free(temp);
     return data;
 }
 
@@ -167,8 +168,8 @@ void BFS(GRAPH *graph, int start)
 
             if (graph->visited[adj_vertex] == 0)
             {
-            graph->visited[adj_vertex] = 1;
-            enqueue(&*queue, adj_vertex);
+                graph->visited[adj_vertex] = 1;
+                enqueue(&queue, adj_vertex);
             }
 
             temp = temp->next;
@@ -181,10 +182,7 @@ int main()
 
     int nr_of_vertices;
     int nr_of_edges;
-    int src, dest;
-    int i;
     int starting_vertex;
-    int *adj_matrix;
 
     printf("cate noduri are graful?");
     scanf("%d", &nr_of_vertices);
@@ -198,7 +196,7 @@ int main()
     scanf("%d", &starting_vertex);
 
     printf("parcurgere cu DFS:");
-    DFS(graph, nr_of_vertices);
+    DFS(graph, starting_vertex);
 
     wipe_visited_list(graph, nr_of_vertices);
     printf("\n");
