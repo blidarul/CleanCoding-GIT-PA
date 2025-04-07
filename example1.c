@@ -2,30 +2,35 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct Node{
+typedef struct Node
+{
     int data;
-    struct Node *next;} 
-/// pentru simplitate, folosim int uri pt a numi restaurantele/locatiile
-/// ex: 1 - restaurantul 1 si tot asa    
-    
-NODE;
-
+    struct Node *next;
+}NODE;
+// pentru simplitate, folosim int uri pt a numi restaurantele/locatiile
+// ex: 1 - restaurantul 1 si tot asa    
 
 typedef struct g
 {
     int v;
     int *vis;
     struct Node **alst;
-} 
-GPH;
+}GPH;
 
-typedef struct s{int t;int scap;int *arr;} STK;
+typedef struct s
+{
+    int t;
+    int scap;
+    int *arr;
+}STK;
 
-NODE *create_node(int v){
+NODE *create_node(int v)
+{
     NODE *nn=malloc(sizeof(NODE));
     nn->data=v;
     nn->next=NULL;
-    return nn;}
+    return nn;
+}
 
 void add_edge(GPH *g,int src,int dest)
 {
@@ -73,11 +78,15 @@ void DFS(GPH *g,STK *s,int v_nr)
 {
     NODE *adj_list=g->alst[v_nr];
     NODE *aux=adj_list;
+
     g->vis[v_nr]=1;
     printf("%d ",v_nr);
     push(v_nr,s);
-    while (aux != NULL){
-        int con_ver=aux->data;if (g->vis[con_ver]==0)
+
+    while (aux != NULL)
+    {
+        int con_ver=aux->data;
+        if (g->vis[con_ver]==0)
             DFS(g,s,con_ver);
         aux=aux->next;
     }
@@ -86,7 +95,8 @@ void DFS(GPH *g,STK *s,int v_nr)
 void insert_edges(GPH *g,int edg_nr,int nrv)
 {
     int src,dest,i;
-    printf("adauga %d munchii (de la 1 la %d)\n",edg_nr,nrv);
+    printf("adauga %d muchii (de la 1 la %d)\n",edg_nr,nrv);
+    
     for (i=0;i<edg_nr;i++)
     {
         scanf("%d%d",&src,&dest);
@@ -118,7 +128,6 @@ void canbe(GPH *g, int nrv, STK *s1, STK *s2)// 0 sau 1 daca poate fi sau nu aju
                     *canbe = 1;
                 
             }
-
         }    
     }
 }
@@ -135,10 +144,10 @@ int main()
     int virtex_2;
     int ans;
 
-    printf("cate noduri are girafa?");
+    printf("cate noduri are graful?");
     scanf("%d", &nrv);
 
-    printf("cate muchii are giraful?");
+    printf("cate muchii are graful?");
     scanf("%d", &edg_nr);
 
     GPH *g = create_g(nrv);
