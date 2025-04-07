@@ -54,8 +54,8 @@ GRAPH *createGraph(int v)
     GRAPH *graph = malloc(sizeof(GRAPH));
     
     graph->v = v;
-    graph->alists = malloc(sizeof(NODE *));
-    graph->visited = malloc(sizeof(int) *v);
+    graph->alists = malloc(v * sizeof(NODE *));
+    graph->visited = malloc(sizeof(int) * v);
 
     for (int i = 0; i < v; i++)
     {
@@ -83,11 +83,10 @@ void push(int pushed, STACK *stack)
 
 void DFS(GRAPH *graph, STACK *stack, int nr_noduri)
 {
-    NODE *adj_list = graph->alists[nr_noduri];
-    NODE *aux = adj_list;
+    NODE *aux = graph->alists[nr_noduri];
 
     graph->visited[nr_noduri] = 1;
-    printf("%d ", nr_noduri);
+    printf("%d ", nr_noduri + 1);
     push(nr_noduri, stack);
 
     while (aux != NULL)
@@ -110,7 +109,7 @@ void insert_edges(GRAPH *graph,int nr_muchii,int nr_noduri)
     for (i = 0; i < nr_muchii; i++)
     {
         scanf("%d%d", &src, &dest);
-        add_edge(graph,src,dest);
+        add_edge(graph, src - 1, dest - 1);  
     }
 }
 
@@ -131,19 +130,24 @@ void canbe(GRAPH *graph, int nr_noduri, STACK *stack1, STACK *stack2)
         for (int j = 0; j < 5; j++)
         {
             DFS(graph, stack1, i);
+
             wipe(graph, nr_noduri);
-            DFS(graph, stack2, i);
+
+            DFS(graph, stack2, j);
+
             for (int j = 0; j < nr_noduri; j++)
             {
                 for (int i = 0; i < nr_noduri; i++)
                 {
                     if ((stack1->array[i] == j) && (stack2->array[j] == i))
+                    {
                         *canbe = 1;
-                    
+                    }
                 }
             }    
         }
     }
+    free(canbe);
 }
 
 int main()
