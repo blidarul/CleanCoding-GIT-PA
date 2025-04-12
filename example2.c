@@ -1,4 +1,4 @@
-/* parcurgerge  graf cu DFS/BFS */
+/* parcurgere graf cu DFS/BFS */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,19 +7,20 @@ typedef struct Node
 {
     int data;
     struct Node *next;
-}NODE;
+} NODE;
 
 typedef struct Graph
 { 
     int vertexCount;
     int *visitedNodes;
     struct Node **adjacencyLists;
-}GRAPH;
-
+} GRAPH;
 
 NODE *createNode(int value)
 { 
     NODE *newNode = malloc(sizeof(NODE));
+    if (!newNode) return NULL;
+    
     newNode->data = value;
     newNode->next = NULL;
     return newNode;

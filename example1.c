@@ -26,6 +26,8 @@ typedef struct Stack
 Node *createNode(int value)
 {
     Node *newNode = malloc(sizeof(Node));
+    if (!newNode) return NULL;
+    
     newNode->value = value;
     newNode->next = NULL;
     return newNode;
