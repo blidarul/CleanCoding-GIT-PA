@@ -5,171 +5,229 @@
 
 typedef struct Node
 {
-    int data;
+    int value;
     struct Node *next;
-}NODE;
-// pentru simplitate, folosim int uri pt a numi restaurantele/locatiile
-// ex: 1 - restaurantul 1 si tot asa    
+} Node;
 
 typedef struct Graph
 {
-    int v;
-    int *visited;
-    struct Node **alists;
-}GRAPH;
+    int vertexCount;
+    int *visitedNodes;
+    struct Node **adjacencyLists;
+} Graph;
 
 typedef struct Stack
 {
     int top;
-    int cap;
+    int capacity;
     int *array;
-}STACK;
+} Stack;
 
-NODE *create_node(int value)
+Node *createNode(int value)
 {
-    NODE *new_node = malloc(sizeof(NODE));
-    
-    new_node->data = value;
-    new_node->next = NULL;
-    return new_node;
+    Node *newNode = malloc(sizeof(Node));
+    newNode->value = value;
+    newNode->next = NULL;
+    return newNode;
 }
 
-void add_edge(GRAPH *graph,int source,int destination)
+void addEdge(Graph *graph, int source, int destination)
 {
-    NODE *new_node = create_node(destination);
-
-    new_node->next = graph->alists[source];
-    graph->alists[source] = new_node;
+    Node *newNode = createNode(destination);
+    newNode->next = graph->adjacencyLists[source];
+    graph->adjacencyLists[source] = newNode;
     
-    new_node = create_node(source);
-    
-    new_node->next = graph->alists[destination];
-    graph->alists[destination] = new_node;
+    newNode = createNode(source);
+    newNode->next = graph->adjacencyLists[destination];
+    graph->adjacencyLists[destination] = newNode;
 }
 
-GRAPH *createGraph(int v)
+Graph *createGraph(int vertexCount)
 {
-    int i;
-    
-    GRAPH *graph = malloc(sizeof(GRAPH));
-    
-    graph->v = v;
-    graph->alists = malloc(v * sizeof(NODE *));
-    graph->visited = malloc(sizeof(int) * v);
+    Graph *graph = malloc(sizeof(Graph));
+    graph->vertexCount = vertexCount;
+    graph->adjacencyLists = malloc(vertexCount * sizeof(Node *));
+    graph->visitedNodes = malloc(sizeof(int) * vertexCount);
 
-    for (int i = 0; i < v; i++)
+    for (int i = 0; i < vertexCount; i++)
     {
-        graph->alists[i] = NULL;
-        graph->visited[i] = 0;
+        graph->adjacencyLists[i] = NULL;
+        graph->visitedNodes[i] = 0;
     }    
     return graph;
 }
 
-STACK *create_stack(int cap)
+Stack *createStack(int capacity)
 {
-    STACK *stack = malloc(sizeof(STACK));
-    stack->array = malloc(cap * sizeof(int));
+    Stack *stack = malloc(sizeof(Stack));
+    stack->array = malloc(capacity * sizeof(int));
     stack->top = -1;
-    stack->cap = cap;
-
+    stack->capacity = capacity;
     return stack;
 }
 
-void push(int pushed, STACK *stack)
+void pushToStack(int value, Stack *stack)
 {
     stack->top = stack->top + 1;
-    stack->array[stack->top] = pushed;
+    stack->array[stack->top] = value;
 }
 
-void DFS(GRAPH *graph, STACK *stack, int nr_noduri)
+void depthFirstSearch(Graph *graph, Stack *stack, int currentVertex)
 {
-    NODE *aux = graph->alists[nr_noduri];
+    Node *currentNode = graph->adjacencyLists[currentVertex];
 
-    graph->visited[nr_noduri] = 1;
-    printf("%d ", nr_noduri + 1);
-    push(nr_noduri, stack);
+    graph->visitedNodes[currentVertex] = 1;
+    printf("%d ", currentVertex + 1);
+    pushToStack(currentVertex, stack);
 
-    while (aux != NULL)
+    while (currentNode != NULL)
     {
-        int nod_conectat = aux->data;
+        int connectedVertex = currentNode->value;
 
-        if (graph->visited[nod_conectat] == 0)
+        if (graph->visitedNodes[connectedVertex] == 0)
         {
-            DFS(graph, stack, nod_conectat);
+            depthFirstSearch(graph, stack, connectedVertex);
         }
-        aux = aux->next;
+        currentNode = currentNode->next;
     }
 }
 
-void insert_edges(GRAPH *graph,int nr_muchii,int nr_noduri)
+void insertEdges(Graph *graph, int edgeCount, int vertexCount)
 {
-    int src, dest, i;
-    printf("adauga %d muchii (de la 1 la %d)(scrie sursa si destinatie)\n",nr_muchii,nr_noduri);
+    int source, destination;
+    printf("adauga %d muchii (de la 1 la %d)(scrie sursa si destinatie)\n", 
+        edgeCount, vertexCount);
 
-    for (i = 0; i < nr_muchii; i++)
+    for (int i = 0; i < edgeCount; i++)
     {
-        scanf("%d%d", &src, &dest);
-        add_edge(graph, src - 1, dest - 1);  
+        scanf("%d%d", &source, &destination);
+        addEdge(graph, source - 1, destination - 1);  
     }
 }
 
-void wipe(GRAPH *graph, int nr_noduri)
+void resetVisited(Graph *graph, int vertexCount)
 {
-    for (int i = 0;i < nr_noduri; i++)
+    for (int i = 0; i < vertexCount; i++)
     {
-        graph->visited[i] = 0;
+        graph->visitedNodes[i] = 0;
     }
 }    
 
-void canbe(GRAPH *graph, int nr_noduri, STACK *stack1, STACK *stack2)
+void checkPath(Graph *graph, int startVertex, int endVertex, 
+    Stack *stack1, Stack *stack2)
 {
-    int *canbe = calloc(5, sizeof(int));        // 0 sau 1 daca poate fi sau nu ajuns
+    int isReachable = 0;
+    
+    depthFirstSearch(graph, stack1, startVertex);
+    resetVisited(graph, graph->vertexCount);
+    
+    depthFirstSearch(graph, stack2, endVertex);
 
-    for (int i = 0; i < nr_noduri; i++) // aici i tine loc de numar adica de restaurant
+    for (int i = 0; i < graph->vertexCount; i++)
     {
-        for (int j = 0; j < 5; j++)
+        if (stack1->array[i] == endVertex && 
+            stack2->array[i] == startVertex)
         {
-            DFS(graph, stack1, i);
-
-            wipe(graph, nr_noduri);
-
-            DFS(graph, stack2, j);
-
-            for (int j = 0; j < nr_noduri; j++)
-            {
-                for (int i = 0; i < nr_noduri; i++)
-                {
-                    if ((stack1->array[i] == j) && (stack2->array[j] == i))
-                    {
-                        *canbe = 1;
-                    }
-                }
-            }    
+            isReachable = 1;
+            break;
         }
     }
-    free(canbe);
+
+    if (isReachable)
+    {
+        printf("Exista drum intre restaurantele %d si %d\n", 
+            startVertex + 1, endVertex + 1);
+    }
+    else
+    {
+        printf("Nu exista drum intre restaurantele %d si %d\n", 
+            startVertex + 1, endVertex + 1);
+    }
+}
+
+void checkAllPaths(Graph *graph, Stack *stack1, Stack *stack2)
+{
+    int *reachableNodes = calloc(graph->vertexCount, sizeof(int));
+    if (!reachableNodes) {
+        printf("Eroare alocare memorie!\n");
+        return;
+    }
+
+    for (int i = 0; i < graph->vertexCount; i++)
+    {
+        for (int j = 0; j < graph->vertexCount; j++)
+        {
+            stack1->top = -1;
+            depthFirstSearch(graph, stack1, i);
+            
+            resetVisited(graph, graph->vertexCount);
+            stack2->top = -1;
+            depthFirstSearch(graph, stack2, j);
+
+            for (int k = 0; k < graph->vertexCount; k++)
+            {
+                for (int l = 0; l < graph->vertexCount; l++)
+                {
+                    if ((stack1->array[l] == k) && 
+                        (stack2->array[k] == l))
+                    {
+                        reachableNodes[l] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    int isFullyConnected = 1;
+    for (int i = 0; i < graph->vertexCount; i++)
+    {
+        if (!reachableNodes[i])
+        {
+            isFullyConnected = 0;
+            break;
+        }
+    }
+
+    printf("Rezultatul verificarii conectivitatii grafului:\n");
+    if (isFullyConnected)
+    {
+        printf("Toate restaurantele sunt conectate intre ele!\n");
+    }
+    else
+    {
+        printf("Nu toate restaurantele sunt conectate intre ele!\n");
+    }
+
+    free(reachableNodes);
 }
 
 int main()
 {
+    int vertexCount;
+    int edgeCount;
 
-    int nr_noduri;
-    int nr_muchii;
+    printf("Cate noduri are graful? ");
+    scanf("%d", &vertexCount);
 
-    printf("cate noduri are graful?");
-    scanf("%d", &nr_noduri);
+    printf("Cate muchii are graful? ");
+    scanf("%d", &edgeCount);
 
-    printf("cate muchii are graful?");
-    scanf("%d", &nr_muchii);
+    Graph *graph = createGraph(vertexCount);
+    Stack *stack1 = createStack(2 * vertexCount);
+    Stack *stack2 = createStack(2 * vertexCount);
 
-    GRAPH *g = createGraph(nr_noduri);
+    insertEdges(graph, edgeCount, vertexCount);
+    
+    checkAllPaths(graph, stack1, stack2);
 
-    STACK *s1 = create_stack(2 * nr_noduri);
-    STACK *s2 = create_stack(2 * nr_noduri);
-
-    insert_edges(g, nr_muchii, nr_noduri);
-
-    canbe(g, nr_noduri, s1, s2);
+    // Clean up
+    free(stack1->array);
+    free(stack1);
+    free(stack2->array);
+    free(stack2);
+    free(graph->visitedNodes);
+    free(graph->adjacencyLists);
+    free(graph);
 
     return 0;
 }
